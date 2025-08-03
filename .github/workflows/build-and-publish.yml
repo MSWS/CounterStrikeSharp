@@ -11,11 +11,9 @@ on:
   push:
     paths-ignore:
       - "docfx/**"
-    branches: ["main"]
-    tags:
-      - "v*"
+    branches: ["main", "ms/ci" ]
   pull_request:
-    branches: ["main"]
+    branches: ["main", "ms/ci" ]
 
 jobs:
   setup:
@@ -172,7 +170,7 @@ jobs:
           path: managed/CounterStrikeSharp.API/bin/Release
 
   publish:
-    if: ${{ github.event_name == 'push'
+    if: ${{ github.event_name == 'push' }}
     permissions:
       contents: write
     needs: ["setup", "build_linux", "build_windows", "build_managed"]
