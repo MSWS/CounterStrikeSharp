@@ -11,8 +11,7 @@ on:
   push:
     paths-ignore:
       - "docfx/**"
-    branches: ["main", "ms/ci" ]
-  pull_request:
+    branches: ["main", "ms/ci" ] pull_request:
     branches: ["main", "ms/ci" ]
 
 jobs:
@@ -38,52 +37,6 @@ jobs:
       uses: gittools/actions/gitversion/execute@v1
       with:
         useConfigFile: true
-
-  build_windows:
-    needs: setup
-    runs-on: windows-latest
-    steps:
-      - name: Prepare env
-        shell: bash
-        run: | 
-          echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
-          echo "SEMVER=${{ needs.setup.outputs.gitversion_semver }}" >> $GITHUB_ENV
-
-      - name: Visual Studio environment
-        shell: cmd
-        run: |
-          :: See https://github.com/microsoft/vswhere/wiki/Find-VC
-          for /f "usebackq delims=*" %%i in (`vswhere -latest -property installationPath`) do (
-            call "%%i"\Common7\Tools\vsdevcmd.bat -arch=x64 -host_arch=x64
-          )
-
-          :: Loop over all environment variables and make them global.
-          for /f "delims== tokens=1,2" %%a in ('set') do (
-            echo>>"%GITHUB_ENV%" %%a=%%b
-          )
-
-      - uses: actions/checkout@v4
-        with:
-          submodules: "recursive"
-
-      - name: Build
-        run: |
-          mkdir -p build
-          cd build
-          cmake -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ..
-          cmake --build . --config ${{env.BUILD_TYPE}} -- /m:16
-
-      - name: Clean build directory
-        run: |
-          mkdir -p build/addons/counterstrikesharp/bin/win64
-          mv build/${{env.BUILD_TYPE}}/*.dll build/addons/counterstrikesharp/bin/win64
-          mkdir build/output/
-          mv build/addons build/output
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: counterstrikesharp-windows-${{ needs.setup.outputs.gitversion_semver }}
-          path: build/output/
 
   build_linux:
     needs: setup
@@ -227,24 +180,8 @@ jobs:
         run: |
           (cd build/linux && zip -qq -r ../../counterstrikesharp-with-runtime-linux-${{ needs.setup.outputs.gitversion_semver }}.zip *)
           (cd build/windows && zip -qq -r ../../counterstrikesharp-with-runtime-windows-${{ needs.setup.outputs.gitversion_semver }}.zip *)
-      
-      - name: Generate a changelog
-        uses: orhun/git-cliff-action@v4
-        id: git-cliff
-        with:
-            config: cliff.toml
-            args: --current -s footer
 
-      - name: Release
-        id: release
-        uses: softprops/action-gh-release@v1
+      - uses: actions/upload-artifact@v4
         with:
-          append_body: true
-          body: |
-
-            Please refer to [CHANGELOG.md](https://github.com/roflmuffin/CounterStrikeSharp/blob/${{ github.ref_name }}/CHANGELOG.md) for details.
-          files: |
-            counterstrikesharp-windows-${{ needs.setup.outputs.gitversion_semver }}.zip
-            counterstrikesharp-with-runtime-windows-${{ needs.setup.outputs.gitversion_semver }}.zip
-            counterstrikesharp-linux-${{ needs.setup.outputs.gitversion_semver }}.zip
-            counterstrikesharp-with-runtime-linux-${{ needs.setup.outputs.gitversion_semver }}.zip
+          name: counterstrikesharp-release-${{ needs.setup.outputs.gitversion_semver }}
+          path: counterstrikesharp-with-runtime-linux-${{ needs.setup.outputs.gitversion_semver }}.zip
