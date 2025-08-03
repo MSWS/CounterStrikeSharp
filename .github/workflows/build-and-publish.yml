@@ -11,9 +11,11 @@ on:
   push:
     paths-ignore:
       - "docfx/**"
-    branches: ["main", "ms/ci" ] pull_request:
     branches: ["main", "ms/ci" ]
-
+  pull_request:
+    paths-ignore:
+      - "docfx/**"
+    branches: ["main", "ms/ci" ]
 jobs:
   setup:
     runs-on: ubuntu-latest
