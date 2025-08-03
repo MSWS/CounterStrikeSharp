@@ -128,7 +128,7 @@ jobs:
     if: ${{ github.event_name == 'push' }}
     permissions:
       contents: write
-    needs: ["setup", "build_linux", "build_windows", "build_managed"]
+    needs: ["setup", "build_linux","build_managed"]
     runs-on: ubuntu-latest
     steps:
       - name: Prepare env
@@ -139,11 +139,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: counterstrikesharp-windows-${{ needs.setup.outputs.gitversion_semver }}
-          path: build/windows
 
       - uses: actions/download-artifact@v4
         with:
@@ -159,14 +154,11 @@ jobs:
       - name: Add API to Artifacts
         run: |
           mkdir -p build/linux/addons/counterstrikesharp/api
-          mkdir -p build/windows/addons/counterstrikesharp/api
           cp -r build/api/net8.0/publish/* build/linux/addons/counterstrikesharp/api
-          cp -r build/api/net8.0/publish/* build/windows/addons/counterstrikesharp/api
 
       - name: Zip Builds
         run: |
           (cd build/linux && zip -qq -r ../../counterstrikesharp-linux-${{ needs.setup.outputs.gitversion_semver }}.zip *)
-          (cd build/windows && zip -qq -r ../../counterstrikesharp-windows-${{ needs.setup.outputs.gitversion_semver }}.zip *)
 
       - name: Add dotnet runtime
         run: |
@@ -174,14 +166,9 @@ jobs:
           curl -s -L https://download.visualstudio.microsoft.com/download/pr/c1371dc2-eed2-47be-9af3-ae060dbe3c7d/bd509e0a87629764ed47608466d183e6/aspnetcore-runtime-8.0.3-linux-x64.tar.gz \
           | tar xvz -C build/linux/addons/counterstrikesharp/dotnet
 
-          mkdir -p build/windows/addons/counterstrikesharp/dotnet
-          curl -s -L https://download.visualstudio.microsoft.com/download/pr/086d1dd6-57a5-437a-a1ef-549cf702fb48/dd4a8fe6c53a1016a414d6f2925c1323/aspnetcore-runtime-8.0.3-win-x64.zip -o dotnet.zip
-          unzip -qq dotnet.zip -d build/windows/addons/counterstrikesharp/dotnet
-
       - name: Zip Builds
         run: |
           (cd build/linux && zip -qq -r ../../counterstrikesharp-with-runtime-linux-${{ needs.setup.outputs.gitversion_semver }}.zip *)
-          (cd build/windows && zip -qq -r ../../counterstrikesharp-with-runtime-windows-${{ needs.setup.outputs.gitversion_semver }}.zip *)
 
       - uses: actions/upload-artifact@v4
         with:
