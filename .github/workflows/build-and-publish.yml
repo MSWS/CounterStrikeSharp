@@ -241,7 +241,6 @@ jobs:
         with:
           append_body: true
           body: |
-            ${{ steps.git-cliff.outputs.content }}
 
             Please refer to [CHANGELOG.md](https://github.com/roflmuffin/CounterStrikeSharp/blob/${{ github.ref_name }}/CHANGELOG.md) for details.
           files: |
